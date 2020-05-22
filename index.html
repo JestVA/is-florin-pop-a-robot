@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
 	<head>
 		<meta charset="utf-8">
 		<title>🤖 Is Florin Pop A Robot? Beep Beep</title>
@@ -13,25 +14,43 @@
 		<!-- shiny button that spills out the facts  -->
 		<h1>This Button Does Nothing.. or Everything</h1>
 		<button class="btn" onclick="findAnswer()">I want to know! 🤷‍♂️</button>
+		<div id="answer"></div>
 	</body>
 
 	<script type="text/javascript">
 		
 		async function findAnswer()
 		{
+			resetAnswerDiv(document.getElementById('answer'));
+			appendTextNodesToAnswer(document.getElementById('answer'), "🤖: Sorry traveller, my API Quota for today was consumed", true);
+			
 			const videoIds = [];
+
+			let noQuotaLimit = true;
 			
 			let nextPageToken = null;
 
 			const res = await getVideoIdsWithPagination(config);
 
+			// quota might be done for the day
+
+			// console.log(res)
+			noQuotaLimit = ! deterMineQuotaErrorAndShowWarning(res);
+
 			nextPageToken = res.nextPageToken;
 		
 			videoIds.push(extractIdCollection(res.items));
 
-			while(nextPageToken)
+			while(nextPageToken && noQuotaLimit)
 			{ 
 				const nextPageResults = await getVideoIdsWithPagination(config, nextPageToken);
+
+				// same here 
+
+				noQuotaLimit = ! deterMineQuotaErrorAndShowWarning(nextPageResults);
+					
+				// console.log(nextPageResults);
+
 				videoIds.push(extractIdCollection(nextPageResults.items));
 				nextPageToken = nextPageResults.nextPageToken || null;
 			}
@@ -41,17 +60,34 @@
 			// loop through array and do api call to get duration 
 			let durationTally = 0;
 
+			console.log(noQuotaLimit);
+
+			if(noQuotaLimit === false)
+				return; // paint something in the DOM;
+
 			for(let i = 0; i < videoIds.length; i++)
 			{
 				// fetches up to 50 vids at once
 				const query = makeVideoIdQueryString(videoIds[i], config);
 
+				// got lazy and made this a triadic f. bad bad bad
 				const { items } = await getVideoIdsWithPagination(false, false, query);
 
 				durationTally += items.reduce((a, c) => a+= parseDurationString(c.contentDetails.duration), 0);
 			}
 
+			// This is YT for now, need to get Twitter as well
+
 			return durationTally;
+		}
+
+		function deterMineQuotaErrorAndShowWarning(respType)
+		{
+			console.log(respType.error.message);
+			if(respType.error.message)
+				return true;
+			else
+				return false;
 		}
 
 		function extractIdCollection(results = [])
@@ -63,6 +99,23 @@
 		{
 			const url = `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(',')}&part=contentDetails&key=${config.API_KEY}`
 			return url;
+		}
+
+		function resetAnswerDiv(element)
+		{
+			element.innerHTML = "";
+			element.className = "show";
+		}
+
+		function appendTextNodesToAnswer(node, text, error = false)
+		{
+			if(error)
+				node.innerHTML = "";
+			
+			const p = document.createElement("p");
+			const t = document.createTextNode(text);
+			p.appendChild(t);
+			node.appendChild(p);
 		}
 
 		/* https://stackoverflow.com/questions/14934089/convert-iso-8601-duration-with-javascript/29153059 */
