@@ -4,7 +4,6 @@
 		<title>🤖 Is Florin Pop A Robot? Beep Beep</title>
 		<link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet">
 		<link href="./style.css" rel="stylesheet">
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 		<script type="text/javascript" src="config.js"></script>
 		<script type="text/javascript" src="findYTvideos.js"></script>
 		<script type="text/javascript" src="./interactive.js"></script>
@@ -18,55 +17,46 @@
 
 	<script type="text/javascript">
 		
-		
 		async function findAnswer()
 		{
-			console.log(1)
+			const videoIds = [];
 			
+			let nextPageToken = null;
+
 			const res = await getVideoIdsWithPagination(config);
 
-			console.log(res);
+			nextPageToken = res.nextPageToken;
 		
-			console.log(3)
+			videoIds.push(extractIdCollection(res.items));
 
+			while(nextPageToken)
+			{ 
+				const nextPageResults = await getVideoIdsWithPagination(config, nextPageToken);
+				videoIds.push(extractIdCollection(nextPageResults.items));
+				nextPageToken = nextPageResults.nextPageToken || null;
+			}
 
-			// function cb (response)
-			// {
+			// we have all the ids at this stage
+			// an array of arrays 
+			// loop through array and do api call to get duration 
+			let durationTally = 0;
 
-			// 	if(response.type === "load")
-			// 		return;
+			for(let i = 0; i < videoIds.length; i++)
+			{
+				// fetches up to 50 vids at once
+				const query = makeVideoIdQueryString(videoIds[i], config);
 
-			// 	// extract Ids
-			// 	if(response.items.length)
-			// 	{
-			// 		console.log(response.items)
-			// 		console.log('true')
+				const { items } = await getVideoIdsWithPagination(false, false, query);
 
+				durationTally += items.reduce((a, c) => a+= parseDurationString(c.contentDetails.duration), 0);
+			}
 
-			// 		const iterationItems = response.items.map(ri => ri.id.videoId ? ri.id.videoId : "playlist");
-					
-					
-					
-			// 		console.log(iterationItems)
-					
-					
-					
-			// 		videoIds.concat(iterationItems);
-			// 	}
+			return durationTally;
+		}
 
-			// 	let nextPage = true;
-
-			// 	if(!response.nextPageToken)
-			// 		nextPage = false;
-
-			// 	// while(nextPage)
-			// 	// {
-			// 	// 	findAnswer(response.nextPageToken);
-			// 	// }
-
-			// 	console.log(videoIds, "videoIds");
-
-			// }
+		function extractIdCollection(results = [])
+		{
+			return results.filter(i => i.id.videoId).map(vid => vid.id.videoId);
 		}
 
 		function makeVideoIdQueryString(ids = [])
@@ -75,9 +65,20 @@
 			return url;
 		}
 
-		
-
-
-
+		/* https://stackoverflow.com/questions/14934089/convert-iso-8601-duration-with-javascript/29153059 */
+		function parseDurationString( durationString ){
+			const stringPattern = /^PT(?:(\d+)D)?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d{1,3})?)S)?$/;
+			const stringParts = stringPattern.exec( durationString );
+			return (
+					(
+					(
+						( stringParts[1] === undefined ? 0 : stringParts[1]*1 )  /* Days */
+						* 24 + ( stringParts[2] === undefined ? 0 : stringParts[2]*1 ) /* Hours */
+					)
+					* 60 + ( stringParts[3] === undefined ? 0 : stringParts[3]*1 ) /* Minutes */
+					)
+					* 60 + ( stringParts[4] === undefined ? 0 : stringParts[4]*1 ) /* Seconds */
+				);
+		}
 	</script>
 </html>
