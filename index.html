@@ -45,8 +45,16 @@
 		
 			videoIds.push(extractIdCollection(res.items));
 
+			let consumedAnswers = 0;
+
 			while(nextPageToken && ! quotaLimit)
-			{ 
+			{ 	
+				// makes the wait time less boring
+				if(consumedAnswers < whileFetching.length)
+					appendTextNodesToAnswer(answerDOMElement, whileFetching[consumedAnswers]);
+
+				consumedAnswers++;
+
 				const nextPageResults = await getVideoIdsWithPagination(config, nextPageToken);
 
 				// will break out of loop if any errors while doing pages
@@ -68,6 +76,11 @@
 			// quick and dirty
 			for(let i = 0; i < videoIds.length; i++)
 			{
+				if(consumedAnswers < whileFetching.length)
+					appendTextNodesToAnswer(answerDOMElement, whileFetching[consumedAnswers]);
+				
+				consumedAnswers++;
+
 				// fetches up to 50 vids at once
 				const query = makeVideoIdQueryString(videoIds[i], config);
 

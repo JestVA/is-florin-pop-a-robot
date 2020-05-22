@@ -26,8 +26,9 @@ const getVideoIdsWithPagination = (config = false, nextPageToken = false, conten
 			// uno dos tres quatros 
 			if(request.readyState === 4)
 				return resolve(JSON.parse(request.response));
+			// call the error function here instead of 3 x times in the flow
 		}
-		
+
 		request.send();
 	});
 }
