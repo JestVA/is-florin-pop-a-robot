@@ -4,6 +4,9 @@
 		<title>🤖 Is Florin Pop A Robot? Beep Beep</title>
 		<link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet">
 		<link href="./style.css" rel="stylesheet">
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+		<script type="text/javascript" src="config.js"></script>
+		<script type="text/javascript" src="findYTvideos.js"></script>
 		<script type="text/javascript" src="./interactive.js"></script>
 	</head>
 
@@ -14,29 +17,67 @@
 	</body>
 
 	<script type="text/javascript">
-		function findAnswer()
+		
+		
+		async function findAnswer()
 		{
-			// open a HTTP protocol
-			const request = new XMLHttpRequest();
+			console.log(1)
+			
+			const res = await getVideoIdsWithPagination(config);
 
-			// move this part to netlify to proxy request and mask API key
-			request.open('GET', PATH_TO_GET, true);
-			request.setRequestHeader('Authorization', `API Key ${API_KEY}`);
-			request.setRequestHeader('Accept', 'application/json');
-			request.addEventListener('load', cb);
-			request.onreadystatechange = function ()
-			{
-				// uno dos tres quatros 
-				if(request.readyState === 4)
-					cb(JSON.parse(request.response));
-			}
+			console.log(res);
+		
+			console.log(3)
 
-			request.send();
 
-			function cb (response)
-			{
-				console.log(response);
-			}
+			// function cb (response)
+			// {
+
+			// 	if(response.type === "load")
+			// 		return;
+
+			// 	// extract Ids
+			// 	if(response.items.length)
+			// 	{
+			// 		console.log(response.items)
+			// 		console.log('true')
+
+
+			// 		const iterationItems = response.items.map(ri => ri.id.videoId ? ri.id.videoId : "playlist");
+					
+					
+					
+			// 		console.log(iterationItems)
+					
+					
+					
+			// 		videoIds.concat(iterationItems);
+			// 	}
+
+			// 	let nextPage = true;
+
+			// 	if(!response.nextPageToken)
+			// 		nextPage = false;
+
+			// 	// while(nextPage)
+			// 	// {
+			// 	// 	findAnswer(response.nextPageToken);
+			// 	// }
+
+			// 	console.log(videoIds, "videoIds");
+
+			// }
 		}
+
+		function makeVideoIdQueryString(ids = [])
+		{
+			const url = `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(',')}&part=contentDetails&key=${config.API_KEY}`
+			return url;
+		}
+
+		
+
+
+
 	</script>
 </html>
