@@ -2,6 +2,8 @@
 <html lang="en" prefix="og: https://ogp.me/ns#">
 	<head>
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
 		<title>🤖 Is Florin Pop A Robot? Beep Beep</title>
 		<link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet">
 		<link href="./style.css" rel="stylesheet">
@@ -19,75 +21,77 @@
 
 	<script type="text/javascript">
 		
+		const answerDOMElement = document.getElementById('answer');
+
 		async function findAnswer()
 		{
-			resetAnswerDiv(document.getElementById('answer'));
-			appendTextNodesToAnswer(document.getElementById('answer'), "🤖: Sorry traveller, my API Quota for today was consumed", true);
+			// reset log if exists
+			resetAnswerDiv(answerDOMElement);
+			
+			let quotaLimit,
+				nextPageToken;
 			
 			const videoIds = [];
 
-			let noQuotaLimit = true;
-			
-			let nextPageToken = null;
-
 			const res = await getVideoIdsWithPagination(config);
 
-			// quota might be done for the day
+			// check quota now
+			quotaLimit = deterMineQuotaErrorAndShowWarning(res);
 
-			// console.log(res)
-			noQuotaLimit = ! deterMineQuotaErrorAndShowWarning(res);
+			if(quotaLimit)
+				return;
 
 			nextPageToken = res.nextPageToken;
 		
 			videoIds.push(extractIdCollection(res.items));
 
-			while(nextPageToken && noQuotaLimit)
+			while(nextPageToken && ! quotaLimit)
 			{ 
 				const nextPageResults = await getVideoIdsWithPagination(config, nextPageToken);
 
-				// same here 
-
-				noQuotaLimit = ! deterMineQuotaErrorAndShowWarning(nextPageResults);
-					
-				// console.log(nextPageResults);
+				// will break out of loop if any errors while doing pages
+				quotaLimit = deterMineQuotaErrorAndShowWarning(nextPageResults);
 
 				videoIds.push(extractIdCollection(nextPageResults.items));
-				nextPageToken = nextPageResults.nextPageToken || null;
-			}
 
-			// we have all the ids at this stage
-			// an array of arrays 
-			// loop through array and do api call to get duration 
+				nextPageToken = nextPageResults.nextPageToken || null; // Obj Key missing when no next page
+			};
+
+			// we have all the video ids at this stage, since begining of channel
+			// loop through array and do call to get duration
+			
 			let durationTally = 0;
 
-			console.log(noQuotaLimit);
+			if(quotaLimit) // we need this here due to control flow after while loop
+				return;
 
-			if(noQuotaLimit === false)
-				return; // paint something in the DOM;
-
+			// quick and dirty
 			for(let i = 0; i < videoIds.length; i++)
 			{
 				// fetches up to 50 vids at once
 				const query = makeVideoIdQueryString(videoIds[i], config);
 
-				// got lazy and made this a triadic f. bad bad bad
+				// got lazy and made this a triadic f. bad bad bad - who likes Bolognese?!
 				const { items } = await getVideoIdsWithPagination(false, false, query);
 
-				durationTally += items.reduce((a, c) => a+= parseDurationString(c.contentDetails.duration), 0);
-			}
+				durationTally += items.reduce((a, c) => a += parseDurationString(c.contentDetails.duration), 0);
+			};
 
 			// This is YT for now, need to get Twitter as well
-
 			return durationTally;
 		}
 
+
+
+		// used when API rate limit is hit (currently 10.000 credits/day, 1 request cca 10-100 credits?)
 		function deterMineQuotaErrorAndShowWarning(respType)
 		{
-			console.log(respType.error.message);
 			if(respType.error.message)
+			{
+				appendTextNodesToAnswer(answerDOMElement, "🤖: Sorry traveller, my API Quota for today was consumed", true);
 				return true;
-			else
-				return false;
+			}
+			return false;
 		}
 
 		function extractIdCollection(results = [])
@@ -97,15 +101,18 @@
 
 		function makeVideoIdQueryString(ids = [])
 		{
+			// joins up to 50 video ids in a string
 			const url = `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(',')}&part=contentDetails&key=${config.API_KEY}`
 			return url;
 		}
 
+		// good when ppl will test this and click the button several times
+		// don't want to make a fool of myself haha
 		function resetAnswerDiv(element)
 		{
 			element.innerHTML = "";
-			element.className = "show";
 		}
+
 
 		function appendTextNodesToAnswer(node, text, error = false)
 		{
@@ -116,6 +123,7 @@
 			const t = document.createTextNode(text);
 			p.appendChild(t);
 			node.appendChild(p);
+			node.className = "show";
 		}
 
 		/* https://stackoverflow.com/questions/14934089/convert-iso-8601-duration-with-javascript/29153059 */

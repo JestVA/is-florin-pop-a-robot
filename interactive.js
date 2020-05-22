@@ -17,5 +17,4 @@ const whileFetching = [
 	"Intercepted tweet",
 	"hmm... 30 sec x many tweets",
 	"Hi Black Twitter!",
-	"Drum rolls"
 ];
