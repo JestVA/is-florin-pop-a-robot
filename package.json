@@ -1,0 +1,29 @@
+{
+  "name": "is-florin-pop-a-robot",
+  "version": "1.0.0",
+  "description": "Found out total duration of an influencer's videos/tweets",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JestVA/is-florin-pop-a-robot.git"
+  },
+  "keywords": [
+    "youtube",
+    "twitter",
+    "duration",
+    "time",
+    "spent"
+  ],
+  "author": "devfrend (@COERCITON)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JestVA/is-florin-pop-a-robot/issues"
+  },
+  "homepage": "https://github.com/JestVA/is-florin-pop-a-robot#readme",
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
+}
