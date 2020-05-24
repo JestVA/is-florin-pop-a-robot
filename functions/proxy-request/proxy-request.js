@@ -1,7 +1,5 @@
 const axios = require('axios');
 
-
-// Docs on event and context https://www.netlify.com/docs/functions/#the-handler-method
 exports.handler = async (event, context) => {
 
 	// in the future convert this to be dynamic coming from Client via a form submit
@@ -11,16 +9,16 @@ exports.handler = async (event, context) => {
 	try 
 	{
 		// run when ready
-		await getTotalVideoDurationForChannelLifetimeYT(FLORIN_POP_CHANNEL);
+		const youTubeDuration = await getTotalVideoDurationForChannelLifetimeYT(FLORIN_POP_CHANNEL);
 
-		return { statusCode: 200, body: JSON.stringify({ message: `Hello Devfrend!` })};
+		return { statusCode: 200, body: JSON.stringify({ message: `Hello Devfrend!`, youTubeDuration })};
 	} 
 	catch(err) 
 	{
 		if(err.message === "API QUOTA LIMIT REACHED.")
 			return { statusCode: 200, body: JSON.stringify({ message: "🤖: Sorry traveller, my API Quota for today was consumed", error: true})};
 
-		return { statusCode: 500, body: err.toString() };
+		return { statusCode: 200, body: JSON.stringify({error: true, message: err.toString()}) };
 	}
 
 	// refactor the old XMLHttpRequest
@@ -55,6 +53,7 @@ exports.handler = async (event, context) => {
 				throw new Error('API QUOTA LIMIT REACHED.');
 		}
 
+		
 		const { items, nextPageToken } = initialReq.data;
 		
 		nextPage = nextPageToken;
@@ -73,7 +72,7 @@ exports.handler = async (event, context) => {
 			catch(err)
 			{
 				api_error = true; // my quota was consumed in 10 sec due to this while erroring...
-				if(err.response.status === 401)
+				if(err.response && err.response.status === 401)
 					throw new Error('API QUOTA LIMIT REACHED.');
 			}
 		
@@ -83,14 +82,43 @@ exports.handler = async (event, context) => {
 			
 			if(! nextPageToken)
 				nextPage = false;
+			else
+				nextPage = nextPageToken
+
 		}
 
+		// we have all the video ids at this stage, since begining of channel
 
+		let durationTally = 0;
+
+		// quick and dirty
+		for(let i = 0; i < videoIds.length; i++)
+		{
+			// fetches up to 50 vids at once
+			const durationQuery = makeVideoIdQueryString(videoIds[i]);
+
+			let withDuration = null;
+			
+			try
+			{
+				withDuration = await axios.get(`${durationQuery}&key=${YT_API_KEY}`, requestOptions);
+			}
+			catch(err)
+			{
+				api_error = true;
+				
+				if(err.response && err.response.status === 401)
+					throw new Error('API QUOTA LIMIT REACHED.');
+			}
+
+			const { items } = withDuration.data;
+
+			durationTally += items.reduce((a, c) => a += parseDurationString(c.contentDetails.duration), 0);
+		};
+
+		// This is YT for now, need to get Twitter as well
+		return durationTally;
 	}
-
-
-
-
 
 
 
@@ -116,37 +144,17 @@ exports.handler = async (event, context) => {
 		// we also filter out playlists
 		return results.filter(i => i.id.videoId).map(vid => vid.id.videoId);
 	}
+
+	function makeVideoIdQueryString(ids = [])
+	{
+		// joins up to 50 video ids in a string
+		return `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(',')}&part=contentDetails`
+	}
 }
 
 
 
 
-// function makeVideoIdQueryString(ids = [])
-// {
-// 	// joins up to 50 video ids in a string
-// 	const url = `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(',')}&part=contentDetails&key=${config.API_KEY}`
-// 	return url;
-// }
 
 
 
-// 	// we have all the video ids at this stage, since begining of channel
-		// 	// loop through array and do call to get duration
-			
-		// 	let durationTally = 0;
-
-		// 	// quick and dirty
-		// 	for(let i = 0; i < videoIds.length; i++)
-		// 	{
-		// 		// fetches up to 50 vids at once
-		// 		const query = makeVideoIdQueryString(videoIds[i], config);
-
-		// 		// got lazy and made this a triadic f. bad bad bad - who likes Bolognese?!
-		// 		const { items } = await getVideoIdsWithPagination(false, false, query);
-
-		// 		durationTally += items.reduce((a, c) => a += parseDurationString(c.contentDetails.duration), 0);
-		// 	};
-
-		// 	// This is YT for now, need to get Twitter as well
-		// 	return durationTally;
-		// }

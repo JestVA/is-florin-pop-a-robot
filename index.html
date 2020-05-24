@@ -14,8 +14,8 @@
 		<div class="page-wrapper">
 			<section class="content-container">
 				<!-- shiny button that spills out the facts  -->
-				<h1>This Button Does Nothing.. or Everything</h1>
-				<button class="btn" onclick="withProxyFindAnswer()">I want to know! 🤷‍♂️</button>
+				<h1>Is Florin Pop A 🤖?</h1>
+				<button id="button" class="btn" onclick="withProxyFindAnswer()">Debunk Rumour</button>
 				<div id="answer"></div>
 			</section>
 			<footer class="credits">
@@ -33,10 +33,13 @@
 		
 		async function withProxyFindAnswer()
 		{
-
 			const answerDOMElement = document.getElementById('answer');
+			
+			const button = document.getElementById('button');
+			
+			button.disabled = true;
 
-			const interactiveAnswer = setInterval(makeWaitLessBoring, 1000);
+			const interactiveAnswer = setInterval(() => makeWaitLessBoring(answerDOMElement), 1000);
 			
 			loadingRequest = true;
 			
@@ -53,8 +56,21 @@
 				resetAnswerDiv(answerDOMElement);
 				
 				appendTextNodesToAnswer(answerDOMElement, res.message, true);
+
+				return;
 			}
 
+			button.textContent = 'Results...';
+			
+			resetAnswerDiv(answerDOMElement);
+
+			const timeFormats = multipleTimeFormats(res.youTubeDuration);
+
+			appendTextNodesToAnswer(answerDOMElement, `Time spent:`, false);
+			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(res.youTubeDuration)} sec`, false);
+			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.minutes)} min`, false);
+			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.hours)} hours`, false);
+			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.days)} days`, false);
 		}
 
 		function makeWaitLessBoring(element)
@@ -64,7 +80,7 @@
 			if(consumedAnswers >= whileFetching.length)
 				return;
 			
-			appendTextNodesToAnswer(element, whileFetching[0]);
+			appendTextNodesToAnswer(element, whileFetching[consumedAnswers]);
 			consumedAnswers++;
 		}
 
@@ -83,6 +99,20 @@
 			p.appendChild(t);
 			node.appendChild(p);
 			node.className = "show";
+		}
+
+		function multipleTimeFormats(duration)
+		{
+			return {
+				minutes: Math.round(duration / 60),
+				hours: Math.round((duration / 60)/60),
+				days: Math.round(((duration / 60)/60)/24)
+			}
+		}
+
+		// https://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
+		function numberWithCommas(x) {
+			return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 		}
 	</script>
 </html>
