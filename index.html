@@ -11,39 +11,63 @@
 	</head>
 
 	<body>
-		<!-- shiny button that spills out the facts  -->
-		<h1>This Button Does Nothing.. or Everything</h1>
-		<button class="btn" onclick="withProxyFindAnswer()">I want to know! 🤷‍♂️</button>
-		<div id="answer"></div>
+		<div class="page-wrapper">
+			<section class="content-container">
+				<!-- shiny button that spills out the facts  -->
+				<h1>This Button Does Nothing.. or Everything</h1>
+				<button class="btn" onclick="withProxyFindAnswer()">I want to know! 🤷‍♂️</button>
+				<div id="answer"></div>
+			</section>
+			<footer class="credits">
+				<a href="https://www.twitter.com/COERCITON" target="_blank">Say hi on Twitter</a>
+				<span>📍</span>
+				<a href="https://www.github.com/JestVA" target="_blank">Visit project on GitHub</a>
+			</footer>
+		</div>
 	</body>
 
 	<script type="text/javascript">
 
+		let loadingRequest = false;
+		let consumedAnswers = 0;
+		
 		async function withProxyFindAnswer()
 		{
+
 			const answerDOMElement = document.getElementById('answer');
+
+			const interactiveAnswer = setInterval(makeWaitLessBoring, 1000);
 			
-			resetAnswerDiv(answerDOMElement);
+			loadingRequest = true;
 			
 			const withProxy = await fetch('/.netlify/functions/proxy-request?yt=true&twitter=true');
 			
 			const res = await withProxy.json();
 			
+			loadingRequest = false;
+			
 			if(res.error)
+			{
+				clearInterval(interactiveAnswer);
+
+				resetAnswerDiv(answerDOMElement);
+				
 				appendTextNodesToAnswer(answerDOMElement, res.message, true);
+			}
+
 		}
 
-		
-		// decide how to deal with the inetractive bit
-		// appendTextNodesToAnswer(answerDOMElement, whileFetching[consumedAnswers]);
+		function makeWaitLessBoring(element)
+		{
+			if(! loadingRequest)
+				return;
+			if(consumedAnswers >= whileFetching.length)
+				return;
+			
+			appendTextNodesToAnswer(element, whileFetching[0]);
+			consumedAnswers++;
+		}
 
-
-
-
-
-		
-		// good when ppl will test this and click the button several times
-		// don't want to make a fool of myself haha
 		function resetAnswerDiv(element)
 		{
 			element.innerHTML = "";
