@@ -14,7 +14,7 @@
 		<div class="page-wrapper">
 			<section class="content-container">
 				<!-- shiny button that spills out the facts  -->
-				<h1>Is Florin Pop A 🤖?</h1>
+				<h1>Is Florin Pop a 🤖?</h1>
 				<button id="button" class="btn" onclick="withProxyFindAnswer()">Debunk Rumour</button>
 				<div id="answer"></div>
 			</section>
@@ -64,10 +64,13 @@
 			
 			resetAnswerDiv(answerDOMElement);
 
-			const timeFormats = multipleTimeFormats(res.youTubeDuration);
+			// assumes 30 sec for Twitter post
+			const finalDurationForBoth = res.youTubeDuration + (res.twitterCount * 30);
+			
+			const timeFormats = multipleTimeFormats(finalDurationForBoth);
 
 			appendTextNodesToAnswer(answerDOMElement, `Time spent:`, false);
-			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(res.youTubeDuration)} sec`, false);
+			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(finalDurationForBoth)} sec`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.minutes)} min`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.hours)} hours`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.days)} days`, false);

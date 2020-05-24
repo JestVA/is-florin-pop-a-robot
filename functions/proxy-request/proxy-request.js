@@ -1,17 +1,20 @@
 const axios = require('axios');
+const request = require('request');
 
 exports.handler = async (event, context) => {
 
 	// in the future convert this to be dynamic coming from Client via a form submit
 	// so it will check `event.queryStringParameters`
 	const FLORIN_POP_CHANNEL = "UCeU-1X402kT-JlLdAitxSMA";
+	const FLORIN_POP_TWITTER = "florinpop1705";
 	
 	try 
 	{
 		// run when ready
 		const youTubeDuration = await getTotalVideoDurationForChannelLifetimeYT(FLORIN_POP_CHANNEL);
+		const twitterCount = await getTwitterDuration(FLORIN_POP_TWITTER);
 
-		return { statusCode: 200, body: JSON.stringify({ message: `Hello Devfrend!`, youTubeDuration })};
+		return { statusCode: 200, body: JSON.stringify({ message: `Hello Devfrend!`, youTubeDuration, twitterCount })};
 	} 
 	catch(err) 
 	{
@@ -118,6 +121,39 @@ exports.handler = async (event, context) => {
 
 		// This is YT for now, need to get Twitter as well
 		return durationTally;
+	}
+
+	async function getTwitterDuration(user)
+	{
+		const credentials = `${process.env.TWITTER_API_KEY}:${process.env.TWITTER_API_SECRET}`;
+		const credentialsEncoded = Buffer.from(credentials).toString('base64');
+
+		// finally! Axios does not make it easy, with 1st obj being data and second being config
+		// I was doing it the other way around like in the GET version...
+		const auth = await axios.post('https://api.twitter.com/oauth2/token', {}, {
+			headers: {
+				'Authorization': `Basic ${credentialsEncoded}`,
+				'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+			},
+			transformRequest: [(data, header) => {
+				data = 'grant_type=client_credentials';
+				return data;
+			}]
+		})
+
+		const bearerToken = auth.data.access_token;
+		
+		
+
+		
+		const getUserDetails = await axios.get(`https://api.twitter.com/1.1/users/show.json?screen_name=${user}`, {
+			headers: {
+				'authorization': `Bearer ${bearerToken}`
+			}
+		});
+
+		
+		return getUserDetails.data.statuses_count;
 	}
 
 
