@@ -39,7 +39,7 @@ body {
 }
   
 h1 {
-	padding: 3rem 1rem;
+	padding: 1.7rem 1rem;
 	text-align: center;
 	font-weight: 300;
 	font-size: 2rem;
@@ -100,7 +100,7 @@ h1 {
 }
 
 .content-container {
-	padding-bottom: 2.5rem;
+	padding-bottom: 3rem;
 }
 
 .credits {
@@ -118,4 +118,11 @@ p {
 button:disabled, button[disabled] {
 	background-color: #23c311bf;
 	box-shadow: 0 6px #328029fc;
+}
+
+.og-tweet {
+	box-shadow: 4px 4px 8px 0 rgba(0, 53, 124, 0.25);
+	border: solid 2px grey;
+	border-radius: 4px;
+	margin-bottom: 1.25rem;
 }

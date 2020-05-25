@@ -15,6 +15,7 @@
 			<section class="content-container">
 				<!-- shiny button that spills out the facts  -->
 				<h1>Is Florin Pop a 🤖?</h1>
+				<img class="og-tweet" width="300px" height="auto" src='./challenge-tweet.png'></img>
 				<button id="button" class="btn" onclick="withProxyFindAnswer()">Debunk Rumour</button>
 				<div id="answer"></div>
 			</section>
@@ -60,7 +61,7 @@
 				return;
 			}
 
-			button.textContent = 'Results...';
+			button.textContent = 'Jury is in';
 			
 			resetAnswerDiv(answerDOMElement);
 
@@ -69,7 +70,7 @@
 			
 			const timeFormats = multipleTimeFormats(finalDurationForBoth);
 
-			appendTextNodesToAnswer(answerDOMElement, `Time spent:`, false);
+			appendTextNodesToAnswer(answerDOMElement, `Total time spent:`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(finalDurationForBoth)} sec`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.minutes)} min`, false);
 			appendTextNodesToAnswer(answerDOMElement, `${numberWithCommas(timeFormats.hours)} hours`, false);
