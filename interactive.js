@@ -5,7 +5,7 @@
 
 const whileFetching = [
 	"Crunching YouTube stats...",
-	"Fetching Twitter user...",
-	"Adding everything up...",
-	"Preparing results..."
+	"Counting user tweets...",
+	"Adding everything...",
+	"Sending results..."
 ];
